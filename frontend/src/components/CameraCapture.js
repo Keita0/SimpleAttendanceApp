@@ -6,39 +6,51 @@ function CameraCapture() {
   const canvasRef = useRef(null);
   const [preview, setPreview] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Start camera
   const startCamera = async () => {
     setSubmitted(false);
     setPreview(null);
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    videoRef.current.srcObject = stream;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoRef.current.srcObject = stream;
+    } catch (error) {
+      alert('Unable to access camera');
+    }
   };
 
-  // Capture photo
   const takePhoto = () => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
 
+    // ✅ Check if video stream is available
+    if (!video.srcObject) {
+      alert('No camera detected or camera not started. Please click "Start Camera" first.');
+      return;
+    }
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
+
     const imageData = canvas.toDataURL('image/jpeg');
     setPreview(imageData);
 
-    // stop camera
-    video.srcObject.getTracks().forEach(track => track.stop());
+    // Stop the camera stream
+    video.srcObject.getTracks().forEach((track) => track.stop());
   };
 
-  // Upload to backend
   const submitAttendance = async () => {
+    if (!preview) return;
+    setIsLoading(true);
+
     const token = localStorage.getItem('token');
-    const userId = parseInt(JSON.parse(atob(token.split('.')[1])).id); // extract from token
+    const userId = parseInt(JSON.parse(atob(token.split('.')[1])).id);
 
     const blob = await (await fetch(preview)).blob();
     const formData = new FormData();
     formData.append('photo', blob, 'photo.jpg');
-    formData.append('user_id', userId); // temporary — we'll replace with req.user on backend later
+    formData.append('user_id', userId);
 
     try {
       await axios.post('http://localhost:3000/api/attendance', formData, {
@@ -47,28 +59,63 @@ function CameraCapture() {
           'Content-Type': 'multipart/form-data'
         }
       });
-      alert('Attendance submitted!');
       setSubmitted(true);
+      alert('Attendance submitted!');
     } catch (err) {
-      alert('Error submitting attendance');
+      alert('Error submitting attendance.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div>
-      {!preview && <button onClick={startCamera}>Start Camera</button>}
-      <video ref={videoRef} autoPlay style={{ width: '300px' }}></video>
-      <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+    <div className="space-y-4 text-center">
+      {!preview && (
+        <button
+          onClick={startCamera}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+        >
+          Start Camera
+        </button>
+      )}
+
+      <div className="flex justify-center">
+        <video
+          ref={videoRef}
+          autoPlay
+          className={`${preview ? 'hidden' : ''} w-full max-w-sm border rounded`}
+        ></video>
+      </div>
+
+      <canvas ref={canvasRef} className="hidden"></canvas>
+
+      {!preview && (
+        <button
+          onClick={takePhoto}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+        >
+          Capture Photo
+        </button>
+      )}
 
       {preview && (
-        <div>
-          <img src={preview} alt="preview" style={{ width: '300px' }} />
-          <button onClick={submitAttendance}>Submit Attendance</button>
+        <div className="space-y-4">
+          <img src={preview} alt="Captured" className="w-full max-w-sm border rounded mx-auto" />
+          <button
+            onClick={submitAttendance}
+            disabled={isLoading}
+            className={`w-full bg-indigo-600 text-white px-4 py-2 rounded transition ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'
+            }`}
+          >
+            {isLoading ? 'Submitting...' : 'Submit Attendance'}
+          </button>
         </div>
       )}
 
-      {!preview && <button onClick={takePhoto}>Capture Photo</button>}
-      {submitted && <p>Submitted successfully!</p>}
+      {submitted && (
+        <p className="text-green-600 font-semibold">Attendance submitted successfully!</p>
+      )}
     </div>
   );
 }

@@ -10,17 +10,28 @@ function Dashboard() {
 
   useEffect(() => {
     if (role === 'admin') {
-      // Redirect admins to their own dashboard
       navigate('/admin');
     }
   }, [role, navigate]);
 
   return (
-    <div>
-      <h2>Employee Dashboard</h2>
-      <LogoutButton />
-      <CameraCapture />
-      <AttendanceHistory />
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Employee Dashboard</h2>
+          <LogoutButton />
+        </div>
+
+        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Attendance Submission</h3>
+          <CameraCapture />
+        </div>
+
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h1 className="text-lg font-semibold text-gray-700 mb-4">Your Attendance History</h1>
+          <AttendanceHistory />
+        </div>
+      </div>
     </div>
   );
 }

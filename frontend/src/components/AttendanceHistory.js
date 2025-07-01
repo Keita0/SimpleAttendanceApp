@@ -16,9 +16,10 @@ function AttendanceHistory() {
             Authorization: `Bearer ${token}`
           }
         });
-        setRecords(res.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+        const sorted = res.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setRecords(sorted);
       } catch (err) {
-        console.error(err);
+        console.error('Failed to load attendance:', err);
       }
     };
 
@@ -26,16 +27,29 @@ function AttendanceHistory() {
   }, []);
 
   return (
-    <div>
-      <h3>Your Attendance History</h3>
-      <ul>
-        {records.map(record => (
-          <li key={record.id}>
-            {new Date(record.timestamp).toLocaleString()} <br />
-            <img src={`http://localhost:3000/uploads/${record.photo_url}`} alt="proof" width="200" />
-          </li>
-        ))}
-      </ul>
+    <div className="space-y-4">
+      {records.length === 0 ? (
+        <p className="text-gray-500">No attendance records found.</p>
+      ) : (
+        records.map(record => (
+          <div
+            key={record.id}
+            className="flex flex-col md:flex-row items-center gap-4 p-4 border rounded shadow-sm bg-white"
+          >
+            <img
+              src={`http://localhost:3000/uploads/${record.photo_url}`}
+              alt="proof"
+              className="w-40 h-auto rounded border"
+            />
+            <div className="text-left">
+              <p className="text-gray-700 font-medium">
+                {new Date(record.timestamp).toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500">Record ID: {record.id}</p>
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
