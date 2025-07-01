@@ -6,6 +6,7 @@ import LogoutButton from '../components/LogoutButton';
 function AdminDashboard() {
   const [records, setRecords] = useState([]);
   const [filterId, setFilterId] = useState('');
+  const [filterRecordId, setFilterRecordId] = useState('');
   const [sortDateAsc, setSortDateAsc] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 20;
@@ -22,22 +23,41 @@ function AdminDashboard() {
     }
   };
 
+  const handleDelete = async (id) => {
+    console.log('Deleting record:', id);
+    const token = localStorage.getItem('token');
+    const confirmDelete = window.confirm(`Are you sure you want to delete record #${id}?`);
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`http://localhost:3000/api/attendance/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRecords((prev) => prev.filter((r) => r.id !== id));
+    } catch (err) {
+      alert('Failed to delete record');
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchRecords();
   }, []);
 
-  // Reset pagination when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterId]);
+  }, [filterId, filterRecordId]);
 
-  // Filter, sort, and paginate
   const filteredRecords = [...records]
-    .filter((r) => (filterId ? r.user_id == filterId : true))
+    .filter((r) => {
+      const userMatches = filterId ? r.user_id == filterId : true;
+      const recordMatches = filterRecordId ? r.id == filterRecordId : true;
+      return userMatches && recordMatches;
+    })
     .sort((a, b) =>
       sortDateAsc
-        ? new Date(a.timestamp) - new Date(b.timestamp)
-        : new Date(b.timestamp) - new Date(a.timestamp)
+        ? a.id - b.id
+        : b.id - a.id
     );
 
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
@@ -70,11 +90,19 @@ function AdminDashboard() {
           onChange={(e) => setFilterId(e.target.value)}
           className="border rounded px-3 py-2 w-full md:w-auto"
         />
+        <input
+          type="number"
+          min="1"
+          placeholder="Filter by Record ID"
+          value={filterRecordId}
+          onChange={(e) => setFilterRecordId(e.target.value)}
+          className="border rounded px-3 py-2 w-full md:w-auto"
+        />
         <button
           onClick={() => setSortDateAsc(!sortDateAsc)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full md:w-auto"
         >
-          Sort by Date ({sortDateAsc ? 'Old → New' : 'New → Old'})
+          Sort by Record ID ({sortDateAsc ? 'Asc' : 'Desc'})
         </button>
       </div>
 
@@ -83,20 +111,28 @@ function AdminDashboard() {
         {paginatedRecords.map((rec) => (
           <div
             key={rec.id}
-            className="p-4 bg-white rounded shadow flex flex-col md:flex-row gap-4 items-start md:items-center"
+            className="p-4 bg-white rounded shadow flex flex-col md:flex-row gap-4 items-start md:items-center justify-between"
           >
-            <img
-              src={`http://localhost:3000/uploads/${rec.photo_url}`}
-              alt="proof"
-              className="w-40 h-auto rounded border"
-            />
-            <div>
-              <p className="text-gray-800 font-medium">User #{rec.user_id}</p>
-              <p className="text-gray-600 text-sm">
-                {new Date(rec.timestamp).toLocaleString()}
-              </p>
-              <p className="text-xs text-gray-400">Record ID: {rec.id}</p>
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+              <img
+                src={`http://localhost:3000/uploads/${rec.photo_url}`}
+                alt="proof"
+                className="w-40 h-auto rounded border"
+              />
+              <div>
+                <p className="text-gray-800 font-medium">User #{rec.user_id}</p>
+                <p className="text-gray-600 text-sm">
+                  {new Date(rec.timestamp).toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-400">Record ID: {rec.id}</p>
+              </div>
             </div>
+            <button
+              onClick={() => handleDelete(rec.id)}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+            >
+              Delete
+            </button>
           </div>
         ))}
       </div>

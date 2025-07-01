@@ -4,10 +4,6 @@ const upload = require('../middlewares/uploadMiddleware');
 const attendanceController = require('../controllers/attendanceController');
 const { verifyToken, isAdmin } = require('../middlewares/authMiddleware');
 
-// router.post('/', upload.single('photo'), attendanceController.submitAttendance);
-// router.get('/', attendanceController.getAllAttendance);
-// router.get('/user/:id', attendanceController.getUserAttendance);
-
 router.post('/', verifyToken, upload.single('photo'), attendanceController.submitAttendance);
 router.get('/', verifyToken, isAdmin, attendanceController.getAllAttendance);
 router.get('/user/:id', verifyToken, attendanceController.getUserAttendance);
