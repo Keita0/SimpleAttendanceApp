@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AddUserForm from '../components/AddUserForm';
+import EditUserForm from '../components/EditUserForm';
+import DeleteUserSection from '../components/DeleteUser';
 import LogoutButton from '../components/LogoutButton';
 
 function AdminDashboard() {
@@ -79,6 +81,17 @@ function AdminDashboard() {
         <h3 className="text-lg font-semibold mb-2 text-gray-700">Add New User</h3>
         <AddUserForm />
       </div>
+
+      <div className="bg-white p-4 rounded shadow">
+        <h3 className="text-lg font-semibold mb-2 text-gray-700">Edit User</h3>
+        <EditUserForm />
+      </div>
+
+      <div className="bg-white p-4 rounded shadow">
+        <h3 className="text-lg font-semibold mb-2 text-gray-700">Delete User</h3>
+        <DeleteUserSection />
+      </div>
+
 
       {/* Filter and sort controls */}
       <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-4 rounded shadow">
