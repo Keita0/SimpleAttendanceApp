@@ -23,4 +23,8 @@ app.use('/api/auth', authRoutes);
 const attendanceRoutes = require('./routes/attendanceRoutes');
 app.use('/api/attendance', attendanceRoutes);
 
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/users', userRoutes);
+
+
 module.exports = app;
