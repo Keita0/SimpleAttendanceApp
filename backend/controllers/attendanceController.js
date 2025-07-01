@@ -37,3 +37,17 @@ exports.getUserAttendance = (req, res) => {
     }
   );
 };
+
+exports.deleteAttendance = (req, res) => {
+  const recordId = req.params.id;
+
+  db.query('DELETE FROM attendance WHERE id = ?', [recordId], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Delete failed', error: err });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Attendance record not found' });
+    }
+
+    res.json({ message: 'Attendance deleted successfully' });
+  });
+};
