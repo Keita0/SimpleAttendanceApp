@@ -61,6 +61,7 @@ function CameraCapture() {
       });
       setSubmitted(true);
       alert('Attendance submitted!');
+      window.location.reload();
     } catch (err) {
       alert('Error submitting attendance.');
     } finally {
