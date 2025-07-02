@@ -18,7 +18,7 @@ function AttendanceHistory() {
             Authorization: `Bearer ${token}`
           }
         });
-        const sorted = res.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const sorted = res.data.sort((a, b) => b.id - a.id);
         setRecords(sorted);
       } catch (err) {
         console.error('Failed to load attendance:', err);
@@ -33,6 +33,28 @@ function AttendanceHistory() {
     (currentPage - 1) * recordsPerPage,
     currentPage * recordsPerPage
   );
+
+  const handleClockOut = async (attendanceId) => {
+  const token = localStorage.getItem('token');
+  try {
+    const res = await axios.post(`http://localhost:3000/api/attendance/clockout/${attendanceId}`, null, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    alert(res.data.message);
+    // Refresh data after clock-out
+    setRecords(prev =>
+      prev.map(r =>
+        r.id === attendanceId ? { ...r, clock_out: new Date().toISOString() } : r
+      )
+    );
+  } catch (err) {
+    console.error('Clock-out failed:', err);
+    alert('Clock-out failed. Try again.');
+  }
+};
+
 
   return (
     <div className="space-y-4">
@@ -50,12 +72,40 @@ function AttendanceHistory() {
                 alt="proof"
                 className="w-40 h-auto rounded border"
               />
-              <div className="text-left">
+              <div className="flex-1 text-left space-y-1">
                 <p className="text-gray-700 font-medium">
-                  {new Date(record.timestamp).toLocaleString()}
+                  Clock In: {new Date(record.clock_in).toLocaleString()}
                 </p>
+
+                {record.clock_out ? (
+                  <p className="text-green-600">Clocked Out: {new Date(record.clock_out).toLocaleString()}</p>
+                ) : (
+                  <p className="text-red-600">Not Clocked Out</p>
+                )}
+
                 <p className="text-sm text-gray-500">Record ID: {record.id}</p>
               </div>
+
+              {!record.clock_out && (() => {
+                const clockInTime = new Date(record.clock_in);
+                const now = new Date();
+                const hoursSinceClockIn = (now - clockInTime) / (1000 * 60 * 60);
+                const isExpired = hoursSinceClockIn > 48;
+
+                return (
+                  <button
+                    onClick={() => handleClockOut(record.id)}
+                    disabled={isExpired}
+                    className={`px-4 py-2 rounded ${
+                      isExpired
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {isExpired ? 'Expired' : 'Clock Out'}
+                  </button>
+                );
+              })()}
             </div>
           ))}
 

@@ -135,7 +135,13 @@ function AdminDashboard() {
               <div>
                 <p className="text-gray-800 font-medium">User #{rec.user_id}</p>
                 <p className="text-gray-600 text-sm">
-                  {new Date(rec.timestamp).toLocaleString()}
+                  Clock in: #{new Date(rec.clock_in).toLocaleString()}
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Clock out:{' '}
+                  {rec.clock_out
+                    ? new Date(rec.clock_out).toLocaleString()
+                    : 'Haven\'t clocked out'}
                 </p>
                 <p className="text-xs text-gray-400">Record ID: {rec.id}</p>
               </div>

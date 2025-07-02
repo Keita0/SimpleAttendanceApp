@@ -8,5 +8,7 @@ router.post('/', verifyToken, upload.single('photo'), attendanceController.submi
 router.get('/', verifyToken, isAdmin, attendanceController.getAllAttendance);
 router.get('/user/:id', verifyToken, attendanceController.getUserAttendance);
 router.delete('/:id', verifyToken, isAdmin, attendanceController.deleteAttendance);
+router.post('/clockout/:id', verifyToken, attendanceController.clockOutAttendance);
+
 
 module.exports = router;

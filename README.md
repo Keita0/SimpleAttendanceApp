@@ -56,7 +56,8 @@ CREATE TABLE `users` (
 CREATE TABLE `attendance` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
-  `timestamp` datetime NOT NULL,
+  `clock_in` datetime NOT NULL,
+  `clock_out` datetime DEFAULT NULL,
   `photo_url` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),

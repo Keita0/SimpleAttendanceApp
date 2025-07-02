@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 exports.submitAttendance = (req, res) => {
   const userId = req.body.user_id;  // later replace with req.user.id after JWT auth
-  const timestamp = new Date();
+  const clock_in = new Date();
   const photo = req.file ? req.file.filename : null;
 
   if (!userId || !photo) {
@@ -10,14 +10,36 @@ exports.submitAttendance = (req, res) => {
   }
 
   db.query(
-    'INSERT INTO attendance (user_id, timestamp, photo_url) VALUES (?, ?, ?)',
-    [userId, timestamp, photo],
+    'INSERT INTO attendance (user_id, clock_in, photo_url) VALUES (?, ?, ?)',
+    [userId, clock_in, photo],
     (err, result) => {
       if (err) return res.status(500).json({ message: 'Insert failed', error: err });
       res.status(201).json({ message: 'Attendance submitted successfully' });
     }
   );
 };
+
+exports.clockOutAttendance = (req, res) => {
+  const attendanceId = req.params.id; // passed via URL param
+  const clockOutTime = new Date();
+
+  db.query(
+    `UPDATE attendance
+     SET clock_out = ?
+     WHERE id = ? AND clock_out IS NULL`,
+    [clockOutTime, attendanceId],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Clock-out failed', error: err });
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Attendance not found or already clocked out' });
+      }
+
+      res.json({ message: 'Clock-out successful' });
+    }
+  );
+};
+
 
 exports.getAllAttendance = (req, res) => {
   db.query('SELECT * FROM attendance', (err, results) => {
